@@ -1,0 +1,52 @@
+@font-face {
+  font-family: Nasalization;
+  src: url('../assets/fonts/Nasalization.otf');
+}
+
+@font-face {
+  font-family: GothaPro;
+  src: url('../assets/fonts/GothaPro.otf');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+div, p, span, h1, h2, h3, h4, img {
+  -moz-user-select: -moz-none;
+  -o-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  outline: none;
+}
+html, body { height: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(188.73deg, #150A57 -3.17%, #02072B 45.15%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body::before {
+  content: '';
+  background: linear-gradient(188.73deg, #150A57 -3.17%, #02072B 45.15%);
+  background-size: cover;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: -2;
+}
+canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+#root {
+  position: fixed;
+}
