@@ -10,6 +10,9 @@ const state: State = {
   tomorrow: [{}],
   day: 0,
   isGetTodayDay: false,
+  dateOfGetStars: "",
+  countOfAdsPerDay: 0,
+  dateOfShowAds: "",
 };
 
 export default state;

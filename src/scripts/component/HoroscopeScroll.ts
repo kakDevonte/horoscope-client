@@ -5,11 +5,11 @@ export class HoroscopeScroll {
   private _bottomSide: Phaser.GameObjects.Sprite;
   private _background: Phaser.GameObjects.TileSprite;
   private _text: Phaser.GameObjects.Text;
-  private _height = 100;
-  private _maxHeight = 370;
+  private _height = 120;
+  private _maxHeight = 230;
   private readonly START_Y = 730;
   private readonly BACKGROUND_WIDTH = 652;
-  private readonly REGEX = /((\s*\S+){18})([\s\S]*)/;
+  private readonly REGEX = /((\s*\S+){15})([\s\S]*)/;
   private readonly _fullText: string;
   private readonly _isFull = false;
   private _shortText: string;
@@ -64,7 +64,7 @@ export class HoroscopeScroll {
       .sprite(centerX, this.START_Y + this._height + 5, "scroll")
       .setOrigin(0.5, 1)
       .setScale(1, -1)
-      .setAlpha(1, 1, 0.5, 0.5);
+      .setAlpha(1, 1, 0.8, 0.8);
 
     if (this._isFull) this.showFullText();
   }
@@ -102,11 +102,10 @@ export class HoroscopeScroll {
         } else if (currentPointerPositionY < previousPointerPositionY) {
           this._text.y -= 10;
         }
-
         previousPointerPositionY = currentPointerPositionY;
         this._text.y = Phaser.Math.Clamp(
           this._text.y,
-          800 - this._text.height,
+          this._text.height > this._maxHeight ? 800 - this._text.height : 800,
           800
         );
       }

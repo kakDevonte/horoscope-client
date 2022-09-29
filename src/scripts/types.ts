@@ -10,6 +10,9 @@ type State = {
   tomorrow: [SingType];
   day: number;
   isGetTodayDay: boolean;
+  dateOfGetStars: string;
+  countOfAdsPerDay: number;
+  dateOfShowAds: string;
 };
 
 type SingType = {

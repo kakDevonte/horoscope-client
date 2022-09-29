@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "http://localhost:4000/api/",
-  //baseURL: "https://297349.simplecloud.ru/api/",
+  //baseURL: "http://localhost:4000/api/",
+  baseURL: "https://297349.simplecloud.ru/api/",
 });
 
 export const horoscopeAPI = {
@@ -15,13 +15,23 @@ export const horoscopeAPI = {
   setDays(id, day) {
     return instance.post(`setDays/`, { id, day });
   },
+  setStars(id, stars) {
+    return instance.post(`setStars/`, { id, stars });
+  },
   setFullPredict(id, stars) {
     return instance.post(`setFullPredict/`, { id, stars });
   },
   addPushNotice(id: number) {
     return instance.post("addPushNotice/", { id });
   },
-  endGame() {
-    return instance.post("stats/end_game/");
+  setDateOfGetStars(id, dateOfGetStars) {
+    return instance.post("setDateOfGetStars/", { id, dateOfGetStars });
+  },
+  setAdsData(id, dateOfShowAds, countOfAdsPerDay) {
+    return instance.post("setAdsData/", {
+      id,
+      dateOfShowAds,
+      countOfAdsPerDay,
+    });
   },
 };

@@ -5,7 +5,7 @@ import { HoroscopeScroll } from "../component/HoroscopeScroll";
 import { ModalType } from "./Modal";
 import { Timer } from "../component/Timer";
 import { horoscopeAPI } from "../libs/Api";
-import bridge from "@vkontakte/vk-bridge";
+import bridge, { EAdsFormats } from "@vkontakte/vk-bridge";
 import * as qs from "qs";
 
 export default class Main extends Phaser.Scene {
@@ -32,8 +32,11 @@ export default class Main extends Phaser.Scene {
     } else {
       this.state.day += 1;
       this.state.isGetTodayDay = true;
-      console.log(this.state.day);
       horoscopeAPI.setDays(this.state.id, this.state.day);
+      if (this.state.day >= 5) {
+        this.state.day = 0;
+        this.state.stars += 5;
+      }
     }
   }
 
@@ -161,39 +164,46 @@ export default class Main extends Phaser.Scene {
       this.buyHoroscope();
     });
 
-    const adButton = this.add
-      .sprite(centerX, adY, "big-button-disable")
-      .setVisible(!this.state.isFullPredict);
+    let adBtn = this.isClickAdButton();
+
+    const adButton = this.add.sprite(
+      centerX,
+      adY,
+      !adBtn.isShowAd && !adBtn.isTakeBonus
+        ? "big-button-disable"
+        : "big-button-active"
+    );
+    // .setVisible(!this.state.isFullPredict);
     this._todayElements.push(adButton);
 
+    const textBtn = adBtn.isShowAd ? "Посмотреть рекламу" : "Получить";
+
     const adText = this.add
-      .text(centerX, adY, "Посмотреть рекламу", textButtonStyle)
-      .setOrigin(0, 0.5)
-      .setVisible(!this.state.isFullPredict);
+      .text(centerX, adY, textBtn, textButtonStyle)
+      .setOrigin(0, 0.5);
+    // .setVisible(!this.state.isFullPredict);
     this._todayElements.push(adText);
 
     const countStarText = this.add
       .text(centerX, adY, `+${starAdCount}`, textButtonStyle)
-      .setOrigin(0, 0.5)
-      .setVisible(!this.state.isFullPredict);
+      .setOrigin(0, 0.5);
+    // .setVisible(!this.state.isFullPredict);
     this._todayElements.push(countStarText);
 
-    const adStar = this.add
-      .sprite(centerX, adY, "star")
-      .setOrigin(0, 0.5)
-      .setVisible(!this.state.isFullPredict);
+    const adStar = this.add.sprite(centerX, adY, "star").setOrigin(0, 0.5);
+    // .setVisible(!this.state.isFullPredict);
     this._todayElements.push(adStar);
 
     const countStageText = this.add
       .text(centerX, adY, `+${stageAdCount}`, textButtonStyle)
-      .setOrigin(0, 0.5)
-      .setVisible(!this.state.isFullPredict);
+      .setOrigin(0, 0.5);
+    // .setVisible(!this.state.isFullPredict);
     this._todayElements.push(countStageText);
 
     const adStage = this.add
       .sprite(centerX, adY, "moon-stage1")
-      .setOrigin(0, 0.5)
-      .setVisible(!this.state.isFullPredict);
+      .setOrigin(0, 0.5);
+    // .setVisible(!this.state.isFullPredict);
     this._todayElements.push(adStage);
 
     const addWidth =
@@ -211,6 +221,7 @@ export default class Main extends Phaser.Scene {
     adStage.setX(countStageText.getBounds().right + 5);
 
     Utils.click(adButton, () => {
+      if (!adBtn.isShowAd && !adBtn.isTakeBonus) return;
       this.showAd();
     });
   }
@@ -220,22 +231,75 @@ export default class Main extends Phaser.Scene {
 
     this.scroll.showFullText();
     this.state.isFullPredict = true;
-    // this.createTodayScreen();
-    // this._todayElements.map((item) => item.setVisible(false));
     this.state.stars -= 2;
     horoscopeAPI.setFullPredict(this.state.id, this.state.stars);
     this.scene.restart(this.state);
   }
 
+  private isClickAdButton() {
+    let isAds = false;
+    let isShowAd = false;
+    let isTakeBonus = false;
+
+    bridge
+      .send("VKWebAppCheckNativeAds", { ad_format: EAdsFormats.REWARD })
+      .then((data) => (isAds = data.result));
+
+    if (this.state.countOfAdsPerDay >= 3) isShowAd = false;
+
+    if (this.state.dateOfShowAds) {
+      let date1 = new Date(this.state.dateOfShowAds);
+      let date2 = new Date();
+
+      const diff = Utils.interval(date1, date2);
+      if (diff.hours >= 6) {
+        this.state.dateOfShowAds = new Date().toUTCString();
+        this.state.countOfAdsPerDay += 1;
+        horoscopeAPI.setAdsData(
+          this.state.id,
+          this.state.dateOfShowAds,
+          this.state.countOfAdsPerDay
+        );
+        isShowAd = true;
+      }
+    }
+
+    if (isShowAd && isAds) return { isShowAd, isTakeBonus };
+
+    if (this.state.dateOfGetStars) {
+      let date1 = new Date(this.state.dateOfGetStars);
+      let date2 = new Date();
+
+      const diff = Utils.interval(date1, date2);
+      if (diff.hours >= 21) {
+        isTakeBonus = true;
+      }
+    } else {
+      isTakeBonus = true;
+    }
+    return { isShowAd, isTakeBonus };
+  }
+
   private showAd() {
     console.log("show ad");
+    this.state.day += 1;
+    this.state.stars += 2;
+    horoscopeAPI.setDays(this.state.id, this.state.day);
+    horoscopeAPI.setStars(this.state.id, this.state.stars);
+    this.state.dateOfGetStars = new Date().toUTCString();
+    horoscopeAPI.setDateOfGetStars(this.state.id, new Date().toUTCString());
+    if (this.state.day >= 5) {
+      this.state.day = 0;
+      this.state.stars += 5;
+    }
+    this.scene.restart(this.state);
   }
 
   private createTomorrowScreen() {
     const { centerX, centerY } = this.cameras.main;
     this.add.sprite(centerX, centerY + 285, "tomorrow-tutorial");
 
-    const timer = new Timer(this);
+    const timer = new Timer(this, this.state);
 
     const close = this.add
       .sprite(centerX, centerY + 400, "button")
@@ -247,7 +311,7 @@ export default class Main extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    Utils.click(close, () => {
+    Utils.clickButton(this, close, () => {
       let parsed = qs.parse(window.location.href);
       if (parseInt(parsed.vk_are_notifications_enabled)) {
         horoscopeAPI.addPushNotice(this.state.id);
@@ -283,13 +347,13 @@ export default class Main extends Phaser.Scene {
       .text(x + offset * 2, y, "В личку", textStyle)
       .setOrigin(0.5);
 
-    Utils.click(wallButton, () => {
+    Utils.clickButton(this, wallButton, () => {
       this.wallButtonHandler();
     });
-    Utils.click(storyButton, () => {
+    Utils.clickButton(this, storyButton, () => {
       this.storyButtonHandler();
     });
-    Utils.click(messageButton, () => {
+    Utils.clickButton(this, messageButton, () => {
       this.messageButtonHandler();
     });
   }
@@ -306,7 +370,47 @@ export default class Main extends Phaser.Scene {
     bridge.send("VKWebAppShowStoryBox", {
       background_type: "image",
       url: "https://sun9-65.userapi.com/c850136/v850136098/1b77eb/0YK6suXkY24.jpg",
+      stickers: [
+        {
+          sticker_type: "renderable",
+          sticker: {
+            content_type: "image",
+            url: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Dialog.png",
+            clickable_zones: [
+              {
+                action_type: "link",
+                action: {
+                  link: "https://vk.com/wall-166562603_1192",
+                  tooltip_text_key: "tooltip_open_post",
+                },
+                clickable_area: [
+                  {
+                    x: 17,
+                    y: 110,
+                  },
+                  {
+                    x: 97,
+                    y: 110,
+                  },
+                  {
+                    x: 97,
+                    y: 132,
+                  },
+                  {
+                    x: 17,
+                    y: 132,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
     });
+    //     {
+    //   background_type: "image",
+    //   url: "https://sun9-65.userapi.com/c850136/v850136098/1b77eb/0YK6suXkY24.jpg",
+    // }
   }
 
   private messageButtonHandler() {
@@ -333,7 +437,7 @@ export default class Main extends Phaser.Scene {
 
     for (let i = 1; i <= MAX_DAY; i += 1) {
       const spriteX = x + (i - 1) * OFFSET;
-      this.add.sprite(spriteX, y, i <= day ? `moon-stage${day}` : "moon-clear");
+      this.add.sprite(spriteX, y, i <= day ? `moon-stage${i}` : "moon-clear");
     }
 
     const text = this.add

@@ -46,6 +46,9 @@ export default class BootScene extends Phaser.Scene {
       this.state.timestamp = data.data.timestamp;
       this.state.isGetTodayDay = data.data.isGetTodayDay;
       this.state.isFullPredict = data.data.isFullPredict;
+      this.state.dateOfGetStars = data.data.dateOfGetStars;
+      this.state.countOfAdsPerDay = data.data.countOfAdsPerDay;
+      this.state.dateOfShowAds = data.data.dateOfShowAds;
       this.userReady = true;
     });
   }

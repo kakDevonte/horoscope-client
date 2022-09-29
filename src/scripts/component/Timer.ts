@@ -1,12 +1,15 @@
-import { Fonts } from "../types";
+import { Fonts, State } from "../types";
+import { horoscopeAPI } from "../libs/Api";
 
 export class Timer {
   private readonly _text: Phaser.GameObjects.Text;
   private _timer: Phaser.Time.TimerEvent;
   private _timeInSeconds: number;
+  private state: State;
 
-  constructor(private readonly _scene: Phaser.Scene) {
+  constructor(private readonly _scene: Phaser.Scene, state) {
     const { centerX, centerY } = this._scene.cameras.main;
+    this.state = state;
     let now = new Date();
     let date = new Date(
       now.getFullYear(),
@@ -43,8 +46,8 @@ export class Timer {
     this._timeInSeconds--;
     this._text.text = this.secondsToHms(this._timeInSeconds);
     if (this._timeInSeconds == 0) {
-      this._timer.remove();
-      //this.timeText.text = "Game Over";
+      horoscopeAPI.getData(this.state.id);
+      this._scene.scene.restart(this.state);
     }
   }
 
